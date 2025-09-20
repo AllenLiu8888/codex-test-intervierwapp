@@ -11,6 +11,7 @@ npm run dev
 
 ## Environment Variables
 - `VITE_API_BASE_URL` — defaults to `https://comp2140a2.uqcloud.net/api` if unspecified.
+
 - `VITE_LLM_API_KEY` — provide the GenAI key when enabling advanced features (use `.env.local` during development).
 
 ## Recording & Transcription

@@ -9,8 +9,10 @@ const defaultValues = {
   title: '',
   firstname: '',
   surname: '',
+
   phone: '',
   email: '',
+
   interview_id: '',
   interview_status: 'Not Started'
 };
@@ -44,14 +46,18 @@ export default function ApplicantForm({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
     const requiredFields = ['firstname', 'surname', 'phone', 'email', 'interview_id'];
+
     const missing = requiredFields.filter((field) => !values[field]?.toString().trim());
     if (missing.length > 0) {
       const newTouched = missing.reduce((acc, field) => ({ ...acc, [field]: true }), {});
       setTouched((prev) => ({ ...prev, ...newTouched }));
       return;
     }
+
     onSubmit({ ...values, interview_id: Number(values.interview_id) });
+
   };
 
   return (
@@ -142,6 +148,7 @@ export default function ApplicantForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
+
           <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
             Phone
           </label>
@@ -151,16 +158,20 @@ export default function ApplicantForm({
             type="tel"
             required
             value={values.phone}
+
             onChange={handleChange}
             onBlur={handleBlur}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
+
           {touched.phone && !values.phone.trim() && (
+
             <p className="text-sm text-rose-600">Phone is required.</p>
           )}
         </div>
 
         <div className="space-y-2">
+
           <label htmlFor="email" className="block text-sm font-medium text-slate-700">
             Email
           </label>
@@ -170,11 +181,14 @@ export default function ApplicantForm({
             type="email"
             required
             value={values.email}
+
             onChange={handleChange}
             onBlur={handleBlur}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
+
           {touched.email && !values.email.trim() && (
+
             <p className="text-sm text-rose-600">Email is required.</p>
           )}
         </div>

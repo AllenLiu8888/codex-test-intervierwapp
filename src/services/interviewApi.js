@@ -1,5 +1,6 @@
 import { apiClient } from './apiClient.js';
 
+
 export async function listInterviews({ signal } = {}) {
   return apiClient.get('/interview', { signal, params: { order: 'created_at.desc' } });
 }
@@ -14,6 +15,7 @@ export async function createInterview(payload, { signal } = {}) {
 
 export async function updateInterview(id, payload, { signal } = {}) {
   return apiClient.patch('/interview', payload, {
+
     signal,
     params: { id: `eq.${id}` },
     headers: { Prefer: 'return=representation' }

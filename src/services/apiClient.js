@@ -1,3 +1,4 @@
+
 const DEFAULT_BASE_URL = 'https://comp2140a2.uqcloud.net/api';
 
 class ApiError extends Error {
@@ -10,8 +11,10 @@ class ApiError extends Error {
 }
 
 class ApiClient {
+
   constructor({ baseUrl = DEFAULT_BASE_URL } = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
+
   }
 
   buildUrl(path, params) {
@@ -27,10 +30,12 @@ class ApiClient {
 
   async request(path, { method = 'GET', params, data, signal, headers } = {}) {
     const url = this.buildUrl(path, params);
+
     const response = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
+
         ...headers
       },
       body: data ? JSON.stringify(data) : undefined,

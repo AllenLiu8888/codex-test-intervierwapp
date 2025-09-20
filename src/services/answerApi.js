@@ -13,6 +13,7 @@ export async function createAnswer(payload, { signal } = {}) {
 
 export async function updateAnswer(id, payload, { signal } = {}) {
   return apiClient.patch('/answer', payload, {
+
     signal,
     params: { id: `eq.${id}` },
     headers: { Prefer: 'return=representation' }

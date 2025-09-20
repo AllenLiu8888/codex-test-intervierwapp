@@ -4,7 +4,9 @@ import ApplicantForm from '../../components/forms/ApplicantForm.jsx';
 import { listInterviews } from '../../services/interviewApi.js';
 import { createApplicant, getApplicant, updateApplicant } from '../../services/applicantApi.js';
 import { useAsyncData } from '../../hooks/useAsyncData.js';
+
 import { buildApplicantLink, generateApplicantToken } from '../../utils/interviewLinks.js';
+
 
 export default function ApplicantEditorPage() {
   const navigate = useNavigate();
@@ -12,7 +14,9 @@ export default function ApplicantEditorPage() {
   const isEditing = Boolean(id);
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
   const [linkToken, setLinkToken] = useState('');
+
 
   const interviewsResult = useAsyncData(({ signal }) => listInterviews({ signal }), []);
   const applicantResult = useAsyncData(
@@ -22,6 +26,7 @@ export default function ApplicantEditorPage() {
 
   useEffect(() => {
     const record = Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data;
+
     if (!record) return;
     const tokenCandidate = record?.invite_token || record?.token || record?.link_token || record?.access_token;
     if (tokenCandidate) {
@@ -44,6 +49,7 @@ export default function ApplicantEditorPage() {
     [interviewsResult.data]
   );
 
+
   const applicant = useMemo(
     () => (Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data),
     [applicantResult.data]
@@ -58,16 +64,21 @@ export default function ApplicantEditorPage() {
     return linkToken;
   };
 
+
   const handleSubmit = async (values) => {
     setSubmitting(true);
     setErrorMessage('');
+
     const token = ensureToken();
     const payload = { ...values, invite_token: token };
+
     try {
       if (isEditing) {
         await updateApplicant(id, payload);
       } else {
+
         await createApplicant(payload);
+
       }
       navigate('/applicants');
     } catch (submissionError) {
@@ -80,8 +91,10 @@ export default function ApplicantEditorPage() {
   const handleCancel = () => navigate('/applicants');
 
   const handleCopyLink = async () => {
+
     const token = ensureToken();
     const link = buildApplicantLink(token);
+
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(link);
@@ -92,7 +105,9 @@ export default function ApplicantEditorPage() {
     }
   };
 
+
   const generatedLink = linkToken ? buildApplicantLink(linkToken) : '';
+
 
   if (interviewsResult.loading || applicantResult.loading) {
     return (

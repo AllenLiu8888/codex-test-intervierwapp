@@ -26,6 +26,7 @@ Create a `.env.local` file with the following keys:
 
 ```
 VITE_API_BASE_URL=https://comp2140a2.uqcloud.net/api
+
 VITE_LLM_API_KEY=YOUR-LLM-KEY-HERE
 ```
 

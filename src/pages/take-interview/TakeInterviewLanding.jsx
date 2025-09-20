@@ -3,8 +3,10 @@ import { useParams } from 'react-router-dom';
 import RecorderControls from '../../components/RecorderControls.jsx';
 import { useAudioRecorder } from '../../hooks/useAudioRecorder.js';
 import { listQuestions } from '../../services/questionApi.js';
+
 import { findApplicantByToken, updateApplicant } from '../../services/applicantApi.js';
 import { createAnswer, listAnswers } from '../../services/answerApi.js';
+
 import { transcribeAudio } from '../../utils/transcription.js';
 
 const STEP = {
@@ -16,7 +18,9 @@ const STEP = {
 };
 
 export default function TakeInterviewLanding() {
+
   const { token } = useParams();
+
   const [step, setStep] = useState(STEP.LOADING);
   const [errorMessage, setErrorMessage] = useState('');
   const [applicant, setApplicant] = useState(null);
@@ -33,7 +37,9 @@ export default function TakeInterviewLanding() {
     async function load() {
       try {
         setStep(STEP.LOADING);
+
         const applicantResponse = await findApplicantByToken(token, { signal: controller.signal });
+
         const applicantRecord = Array.isArray(applicantResponse) ? applicantResponse[0] : applicantResponse;
         if (!applicantRecord) {
           setErrorMessage('We could not find your interview invitation.');
@@ -52,7 +58,9 @@ export default function TakeInterviewLanding() {
         if (Array.isArray(answersResponse)) {
           answerMap = answersResponse.reduce((acc, answer) => {
             if (answer.question_id) {
+
               acc[answer.question_id] = answer.transcript ?? answer.answer_text ?? answer.response ?? '';
+
             }
             return acc;
           }, {});
@@ -65,7 +73,9 @@ export default function TakeInterviewLanding() {
           return;
         }
 
+
         const firstUnansweredIndex = normalizedQuestions.findIndex((question) => !answerMap[question.id]);
+
         if (firstUnansweredIndex === -1) {
           setCurrentIndex(0);
           setStep(STEP.COMPLETE);
@@ -81,7 +91,9 @@ export default function TakeInterviewLanding() {
     }
     load();
     return () => controller.abort();
+
   }, [token]);
+
 
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const totalQuestions = questions.length;
@@ -108,11 +120,13 @@ export default function TakeInterviewLanding() {
       const transcript = await transcribeAudio(recorder.audioBlob);
       const payload = {
         applicant_id: applicant.id,
+
         question_id: currentQuestion.id,
         transcript
       };
       await createAnswer(payload);
       setAnswers((prev) => ({ ...prev, [currentQuestion.id]: transcript }));
+
       recorder.reset();
       setTranscriptionMessage('Answer saved successfully.');
       const nextIndex = currentIndex + 1;
@@ -138,7 +152,9 @@ export default function TakeInterviewLanding() {
         <p className="text-sm uppercase tracking-wide text-indigo-500">Welcome</p>
         <h2 className="text-3xl font-semibold text-slate-900">Hi {applicant?.firstname}!</h2>
         <p className="text-slate-600 max-w-2xl">
+
           You are about to begin the {applicant?.job_role || 'interview'} experience. Please ensure you are in a quiet
+
           environment and allow microphone access. You will answer {totalQuestions} questions, one at a time, by recording your
           spoken response. You may pause during recording, but you cannot re-record once finished.
         </p>
