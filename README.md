@@ -26,13 +26,9 @@ Create a `.env.local` file with the following keys:
 
 ```
 VITE_API_BASE_URL=https://comp2140a2.uqcloud.net/api
-VITE_API_JWT=YOUR-POSTGREST-JWT
-VITE_API_USERNAME=YOUR-STUDENT-ID # optional when JWT payload already includes username
+
 VITE_LLM_API_KEY=YOUR-LLM-KEY-HERE
 ```
-
-`VITE_API_JWT` is required for every API request. When omitted, calls will fail with `401 Unauthorized`. `VITE_API_USERNAME` is
-optional—the app will attempt to read the username from the JWT payload automatically.
 
 `VITE_LLM_API_KEY` is optional for the placeholder GenAI feature but required once a production integration is wired.
 

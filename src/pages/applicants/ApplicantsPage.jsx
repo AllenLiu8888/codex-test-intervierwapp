@@ -26,8 +26,10 @@ export default function ApplicantsPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState('');
 
-  const handleCopyLink = async (applicantId) => {
-    const link = buildApplicantLink(applicantId);
+
+  const handleCopyLink = async (token) => {
+    const link = buildApplicantLink(token);
+
     try {
       if (navigator.clipboard?.writeText && link) {
         await navigator.clipboard.writeText(link);
@@ -141,7 +143,10 @@ export default function ApplicantsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {applicants.map((applicant) => {
-                const link = applicant?.id ? buildApplicantLink(applicant.id) : '';
+
+                const token = applicant.invite_token || applicant.token || applicant.link_token || applicant.access_token;
+                const link = token ? buildApplicantLink(token) : '';
+
                 return (
                   <tr key={applicant.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">
@@ -149,8 +154,10 @@ export default function ApplicantsPage() {
                       {applicant.firstname} {applicant.surname}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
-                      <div>{applicant.email_address}</div>
-                      <div className="text-xs text-slate-500">{applicant.phone_number}</div>
+
+                      <div>{applicant.email}</div>
+                      <div className="text-xs text-slate-500">{applicant.phone}</div>
+
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">{applicant.interview_id ?? '—'}</td>
                     <td className="px-4 py-3 text-sm">
@@ -167,7 +174,9 @@ export default function ApplicantsPage() {
                         {link && (
                           <button
                             type="button"
-                            onClick={() => handleCopyLink(applicant.id)}
+
+                            onClick={() => handleCopyLink(token)}
+
                             className="rounded-md border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:border-indigo-300 hover:text-indigo-500"
                           >
                             Copy link

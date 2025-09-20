@@ -9,4 +9,3 @@
 - [ ] UI uses TailwindCSS with consistent header/footer/navigation and guidance cues (Rubric 2.x).
 - [ ] Advanced GenAI feature implemented using `VITE_LLM_API_KEY` (Rubric 4.1).
 - [ ] Documentation updated: README includes GenAI usage, `/docs` synced with implementation.
-- [ ] `.env` includes `VITE_API_JWT` (and optional `VITE_API_USERNAME`) so authenticated API calls succeed.

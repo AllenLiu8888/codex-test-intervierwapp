@@ -4,7 +4,9 @@ import ApplicantForm from '../../components/forms/ApplicantForm.jsx';
 import { listInterviews } from '../../services/interviewApi.js';
 import { createApplicant, getApplicant, updateApplicant } from '../../services/applicantApi.js';
 import { useAsyncData } from '../../hooks/useAsyncData.js';
-import { buildApplicantLink } from '../../utils/interviewLinks.js';
+
+import { buildApplicantLink, generateApplicantToken } from '../../utils/interviewLinks.js';
+
 
 export default function ApplicantEditorPage() {
   const navigate = useNavigate();
@@ -12,7 +14,9 @@ export default function ApplicantEditorPage() {
   const isEditing = Boolean(id);
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState('');
+
+  const [linkToken, setLinkToken] = useState('');
+
 
   const interviewsResult = useAsyncData(({ signal }) => listInterviews({ signal }), []);
   const applicantResult = useAsyncData(
@@ -22,12 +26,19 @@ export default function ApplicantEditorPage() {
 
   useEffect(() => {
     const record = Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data;
-    if (record?.id) {
-      setGeneratedLink(buildApplicantLink(record.id));
-    } else {
-      setGeneratedLink('');
+
+    if (!record) return;
+    const tokenCandidate = record?.invite_token || record?.token || record?.link_token || record?.access_token;
+    if (tokenCandidate) {
+      setLinkToken(tokenCandidate);
     }
   }, [applicantResult.data]);
+
+  useEffect(() => {
+    if (!isEditing && !linkToken) {
+      setLinkToken(generateApplicantToken());
+    }
+  }, [isEditing, linkToken]);
 
   const interviewOptions = useMemo(
     () =>
@@ -38,32 +49,36 @@ export default function ApplicantEditorPage() {
     [interviewsResult.data]
   );
 
-  const applicant = useMemo(() => {
-    const record = Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data;
-    if (!record) return undefined;
-    return {
-      ...record,
-      interview_id: record.interview_id ? String(record.interview_id) : ''
-    };
-  }, [applicantResult.data]);
+
+  const applicant = useMemo(
+    () => (Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data),
+    [applicantResult.data]
+  );
+
+  const ensureToken = () => {
+    if (!linkToken) {
+      const token = generateApplicantToken();
+      setLinkToken(token);
+      return token;
+    }
+    return linkToken;
+  };
+
 
   const handleSubmit = async (values) => {
     setSubmitting(true);
     setErrorMessage('');
-    const { id: _omitId, ...rest } = values;
-    const payload = {
-      ...rest,
-      interview_id: Number(values.interview_id)
-    };
+
+    const token = ensureToken();
+    const payload = { ...values, invite_token: token };
+
     try {
       if (isEditing) {
         await updateApplicant(id, payload);
       } else {
-        const created = await createApplicant(payload);
-        const createdRecord = Array.isArray(created) ? created[0] : created;
-        if (createdRecord?.id) {
-          setGeneratedLink(buildApplicantLink(createdRecord.id));
-        }
+
+        await createApplicant(payload);
+
       }
       navigate('/applicants');
     } catch (submissionError) {
@@ -76,7 +91,10 @@ export default function ApplicantEditorPage() {
   const handleCancel = () => navigate('/applicants');
 
   const handleCopyLink = async () => {
-    const link = generatedLink;
+
+    const token = ensureToken();
+    const link = buildApplicantLink(token);
+
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(link);
@@ -86,6 +104,10 @@ export default function ApplicantEditorPage() {
       setErrorMessage('Unable to copy link automatically. Copy it manually.');
     }
   };
+
+
+  const generatedLink = linkToken ? buildApplicantLink(linkToken) : '';
+
 
   if (interviewsResult.loading || applicantResult.loading) {
     return (

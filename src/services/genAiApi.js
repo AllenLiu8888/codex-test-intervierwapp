@@ -15,7 +15,9 @@ export async function generateApplicantSummary({ applicant, answers }) {
   }
 
   const answerHighlights = (answers || [])
-    .map((answer, index) => `Q${index + 1}: ${answer.answer?.slice(0, 140) || 'No transcript yet.'}`)
+
+    .map((answer, index) => `Q${index + 1}: ${answer.transcript?.slice(0, 140) || 'No transcript yet.'}`)
+
     .join('\n');
 
   return `AI Summary (simulated) for ${applicant.firstname} ${applicant.surname}:\n` +

@@ -32,7 +32,9 @@ export default function AppRoutes() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
-      <Route path="/take/:applicantId" element={<TakeInterviewLanding />} />
+
+      <Route path="/take/:token" element={<TakeInterviewLanding />} />
+
     </Routes>
   );
 }
