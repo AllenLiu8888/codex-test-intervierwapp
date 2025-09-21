@@ -1,12 +1,11 @@
+// 候选人面试流程页面，实现录音、转写及答案保存的完整闭环。
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import RecorderControls from '../../components/RecorderControls.jsx';
 import { useAudioRecorder } from '../../hooks/useAudioRecorder.js';
 import { listQuestions } from '../../services/questionApi.js';
-
-import { findApplicantByToken, updateApplicant } from '../../services/applicantApi.js';
-import { createAnswer, listAnswers } from '../../services/answerApi.js';
-
+import { getApplicant, updateApplicant } from '../../services/applicantApi.js';
+import { createAnswer, listAnswers, updateAnswer } from '../../services/answerApi.js';
 import { transcribeAudio } from '../../utils/transcription.js';
 
 const STEP = {
@@ -18,9 +17,7 @@ const STEP = {
 };
 
 export default function TakeInterviewLanding() {
-
-  const { token } = useParams();
-
+  const { applicantId } = useParams();
   const [step, setStep] = useState(STEP.LOADING);
   const [errorMessage, setErrorMessage] = useState('');
   const [applicant, setApplicant] = useState(null);
@@ -33,13 +30,18 @@ export default function TakeInterviewLanding() {
   const recorder = useAudioRecorder();
 
   useEffect(() => {
+    // 初始化加载候选人与题目列表，并恢复历史答案。
     const controller = new AbortController();
     async function load() {
       try {
         setStep(STEP.LOADING);
-
-        const applicantResponse = await findApplicantByToken(token, { signal: controller.signal });
-
+        const numericApplicantId = Number(applicantId);
+        if (!numericApplicantId) {
+          setErrorMessage('This interview link is invalid.');
+          setStep(STEP.ERROR);
+          return;
+        }
+        const applicantResponse = await getApplicant(numericApplicantId, { signal: controller.signal });
         const applicantRecord = Array.isArray(applicantResponse) ? applicantResponse[0] : applicantResponse;
         if (!applicantRecord) {
           setErrorMessage('We could not find your interview invitation.');
@@ -58,9 +60,7 @@ export default function TakeInterviewLanding() {
         if (Array.isArray(answersResponse)) {
           answerMap = answersResponse.reduce((acc, answer) => {
             if (answer.question_id) {
-
-              acc[answer.question_id] = answer.transcript ?? answer.answer_text ?? answer.response ?? '';
-
+              acc[answer.question_id] = answer;
             }
             return acc;
           }, {});
@@ -73,9 +73,10 @@ export default function TakeInterviewLanding() {
           return;
         }
 
-
-        const firstUnansweredIndex = normalizedQuestions.findIndex((question) => !answerMap[question.id]);
-
+        const firstUnansweredIndex = normalizedQuestions.findIndex((question) => {
+          const existing = answerMap[question.id];
+          return !existing || !existing.answer;
+        });
         if (firstUnansweredIndex === -1) {
           setCurrentIndex(0);
           setStep(STEP.COMPLETE);
@@ -91,14 +92,13 @@ export default function TakeInterviewLanding() {
     }
     load();
     return () => controller.abort();
-
-  }, [token]);
-
+  }, [applicantId]);
 
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const totalQuestions = questions.length;
 
   const startInterview = () => {
+    // 开始答题时仅允许向前推进，满足 Rubric 禁止回退的要求。
     if (!questions.length) {
       setErrorMessage('No questions were assigned to this interview.');
       setStep(STEP.ERROR);
@@ -113,6 +113,7 @@ export default function TakeInterviewLanding() {
       setErrorMessage('Please record your answer before continuing.');
       return;
     }
+    // 提交时先转写音频，再调用答案接口保存文本。
     setSaving(true);
     setTranscriptionMessage('Transcribing your answer, please wait...');
     setErrorMessage('');
@@ -120,13 +121,25 @@ export default function TakeInterviewLanding() {
       const transcript = await transcribeAudio(recorder.audioBlob);
       const payload = {
         applicant_id: applicant.id,
-
+        interview_id: applicant.interview_id,
         question_id: currentQuestion.id,
-        transcript
+        answer: transcript
       };
-      await createAnswer(payload);
-      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: transcript }));
-
+      const existingAnswer = answers[currentQuestion.id];
+      let savedRecord;
+      if (existingAnswer?.id) {
+        const updated = await updateAnswer(existingAnswer.id, { answer: transcript });
+        savedRecord = Array.isArray(updated) ? updated[0] : updated;
+      } else {
+        const created = await createAnswer(payload);
+        savedRecord = Array.isArray(created) ? created[0] : created;
+      }
+      const normalizedRecord = savedRecord || {
+        ...existingAnswer,
+        ...payload,
+        answer: transcript
+      };
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: normalizedRecord }));
       recorder.reset();
       setTranscriptionMessage('Answer saved successfully.');
       const nextIndex = currentIndex + 1;
@@ -134,6 +147,7 @@ export default function TakeInterviewLanding() {
         setCurrentIndex(nextIndex);
         setTimeout(() => setTranscriptionMessage(''), 1500);
       } else {
+        // 所有题目作答完毕，更新候选人状态为 Completed。
         await updateApplicant(applicant.id, { interview_status: 'Completed' });
         setApplicant((prev) => (prev ? { ...prev, interview_status: 'Completed' } : prev));
         setStep(STEP.COMPLETE);
@@ -152,9 +166,7 @@ export default function TakeInterviewLanding() {
         <p className="text-sm uppercase tracking-wide text-indigo-500">Welcome</p>
         <h2 className="text-3xl font-semibold text-slate-900">Hi {applicant?.firstname}!</h2>
         <p className="text-slate-600 max-w-2xl">
-
-          You are about to begin the {applicant?.job_role || 'interview'} experience. Please ensure you are in a quiet
-
+          You are about to begin your interview experience. Please ensure you are in a quiet
           environment and allow microphone access. You will answer {totalQuestions} questions, one at a time, by recording your
           spoken response. You may pause during recording, but you cannot re-record once finished.
         </p>

@@ -1,3 +1,4 @@
+// 面试题目表单，支持新增与编辑操作。
 import { useEffect, useState } from 'react';
 
 const DIFFICULTY_OPTIONS = [
@@ -20,10 +21,12 @@ export default function QuestionForm({
   submitting,
   errorMessage
 }) {
+  // 管理表单状态并避免非受控输入。
   const [values, setValues] = useState({ ...defaultValues, ...initialValues });
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
+    // 当切换到新的题目时重置表单。
     setValues({ ...defaultValues, ...initialValues });
   }, [initialValues]);
 
@@ -39,10 +42,12 @@ export default function QuestionForm({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    // 题干与所属面试为必填字段。
     if (!values.question.trim() || !values.interview_id) {
       setTouched({ question: true, interview_id: true });
       return;
     }
+    // 将 interview_id 转换为数字以匹配后端类型。
     onSubmit({ ...values, interview_id: Number(values.interview_id) });
   };
 
@@ -105,6 +110,7 @@ export default function QuestionForm({
           onChange={handleChange}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         >
+          {/* 难度选项固定写死，符合 PRD 要求 */}
           {DIFFICULTY_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -119,6 +125,7 @@ export default function QuestionForm({
         <button
           type="button"
           onClick={onCancel}
+          // 返回列表或上一页。
           className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-500"
         >
           Cancel
@@ -126,6 +133,7 @@ export default function QuestionForm({
         <button
           type="submit"
           disabled={submitting}
+          // Loading 状态反馈。
           className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? 'Saving...' : 'Save Question'}

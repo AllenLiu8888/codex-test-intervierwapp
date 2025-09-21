@@ -1,3 +1,4 @@
+// 候选人列表页面，提供筛选、邀请链接、AI 总结等功能。
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCallback, useMemo, useState } from 'react';
 import { listApplicants } from '../../services/applicantApi.js';
@@ -15,6 +16,7 @@ const statusStyles = {
 export default function ApplicantsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const interviewId = searchParams.get('interview') || undefined;
+  // 通过 useAsyncData 统一处理加载、错误和数据。
   const { data, loading, error, refetch } = useAsyncData(
     ({ signal }) => listApplicants(interviewId, { signal }),
     [interviewId]
@@ -26,10 +28,9 @@ export default function ApplicantsPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState('');
 
-
-  const handleCopyLink = async (token) => {
-    const link = buildApplicantLink(token);
-
+  const handleCopyLink = async (applicantId) => {
+    // 构造候选人独立面试链接并复制到剪贴板。
+    const link = buildApplicantLink(applicantId);
     try {
       if (navigator.clipboard?.writeText && link) {
         await navigator.clipboard.writeText(link);
@@ -42,6 +43,7 @@ export default function ApplicantsPage() {
   };
 
   const clearFilter = () => {
+    // 清除筛选参数，展示全部候选人。
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('interview');
     setSearchParams(nextParams, { replace: true });
@@ -50,6 +52,7 @@ export default function ApplicantsPage() {
   const runSummary = useCallback(
     async (applicantToSummarize) => {
       if (!applicantToSummarize) return;
+      // 生成 AI 总结前先重置状态并拉取最新答案列表。
       setSummaryApplicant(applicantToSummarize);
       setSummaryLoading(true);
       setSummaryError('');
@@ -74,6 +77,7 @@ export default function ApplicantsPage() {
           <h2 className="text-3xl font-semibold text-slate-900">Applicants</h2>
           <p className="text-slate-600">Track candidate invitations and completion status.</p>
           {interviewId && (
+            // 可视化当前筛选状态并提供清除操作。
             <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
               Filtering by interview #{interviewId}
               <button type="button" onClick={clearFilter} className="text-indigo-500 underline-offset-2 hover:underline">
@@ -143,10 +147,7 @@ export default function ApplicantsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {applicants.map((applicant) => {
-
-                const token = applicant.invite_token || applicant.token || applicant.link_token || applicant.access_token;
-                const link = token ? buildApplicantLink(token) : '';
-
+                const link = applicant?.id ? buildApplicantLink(applicant.id) : '';
                 return (
                   <tr key={applicant.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">
@@ -154,10 +155,8 @@ export default function ApplicantsPage() {
                       {applicant.firstname} {applicant.surname}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
-
-                      <div>{applicant.email}</div>
-                      <div className="text-xs text-slate-500">{applicant.phone}</div>
-
+                      <div>{applicant.email_address}</div>
+                      <div className="text-xs text-slate-500">{applicant.phone_number}</div>
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">{applicant.interview_id ?? '—'}</td>
                     <td className="px-4 py-3 text-sm">
@@ -165,6 +164,7 @@ export default function ApplicantsPage() {
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                           statusStyles[applicant.interview_status] ?? 'bg-slate-100 text-slate-600'
                         }`}
+                        // 颜色标签帮助 HR 快速了解候选人进度。
                       >
                         {applicant.interview_status ?? 'Not Started'}
                       </span>
@@ -174,9 +174,8 @@ export default function ApplicantsPage() {
                         {link && (
                           <button
                             type="button"
-
-                            onClick={() => handleCopyLink(token)}
-
+                            onClick={() => handleCopyLink(applicant.id)}
+                            // 提供一键复制链接，便于外发邀请。
                             className="rounded-md border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:border-indigo-300 hover:text-indigo-500"
                           >
                             Copy link
@@ -215,6 +214,7 @@ export default function ApplicantsPage() {
           setSummaryText('');
           setSummaryError('');
         }}
+        // 允许用户在侧边栏重新触发 AI 分析。
         onGenerate={() => runSummary(summaryApplicant)}
       />
     </section>

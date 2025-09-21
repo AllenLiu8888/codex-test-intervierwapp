@@ -1,16 +1,11 @@
-
-export function generateApplicantToken() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
+// 根据候选人 ID 生成唯一的面试链接。
+export function buildApplicantLink(applicantId) {
+  if (!applicantId) return '';
+  if (typeof window === 'undefined') {
+    return '';
   }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-export function buildApplicantLink(token) {
-  if (!token) return '';
   const url = new URL(window.location.href);
-  url.pathname = `/take/${token}`;
-
+  url.pathname = `/take/${applicantId}`;
   url.search = '';
   url.hash = '';
   return url.toString();

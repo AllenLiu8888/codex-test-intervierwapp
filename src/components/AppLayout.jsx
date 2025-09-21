@@ -1,5 +1,7 @@
+// 全局布局组件，负责渲染统一的头部、导航、内容区域和页脚。
 import { NavLink, Outlet } from 'react-router-dom';
 
+// 导航条配置，保持页面结构清晰可扩展。
 const navItems = [
   { to: '/', label: 'Dashboard' },
   { to: '/interviews', label: 'Interviews' },
@@ -18,6 +20,7 @@ export default function AppLayout() {
               AI interview platform for collaborative hiring.
             </p>
           </div>
+          {/* 顶部导航，使用 NavLink 自动添加当前选中状态 */}
           <nav className="flex flex-wrap gap-2">
             {navItems.map((item) => (
               <NavLink
@@ -38,6 +41,7 @@ export default function AppLayout() {
       </header>
 
       <main className="flex-1">
+        {/* 将页面内容放置在统一的栅格内，保证视觉一致性 */}
         <div className="max-w-6xl mx-auto px-4 py-8">
           <Outlet />
         </div>

@@ -1,4 +1,6 @@
+// 候选人 AI 总结侧边栏，展示生成的洞察并提供刷新与关闭操作。
 export default function ApplicantSummaryPanel({ applicant, summary, loading, error, onClose, onGenerate }) {
+  // 没有传入候选人时直接不渲染，避免多余开销。
   if (!applicant) return null;
 
   return (
@@ -32,6 +34,7 @@ export default function ApplicantSummaryPanel({ applicant, summary, loading, err
       </div>
 
       <div className="mt-4 rounded-lg bg-white p-4 shadow-sm">
+        {/* 根据错误、加载和结果三种状态分别渲染内容 */}
         {error && <p className="text-sm text-rose-600">{error}</p>}
         {!error && summary && (
           <pre className="whitespace-pre-wrap text-sm text-slate-700">{summary}</pre>

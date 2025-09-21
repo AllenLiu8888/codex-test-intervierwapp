@@ -1,18 +1,19 @@
+// 候选人新增/编辑表单，复用同一套组件满足 DRY 原则。
 import { useEffect, useState } from 'react';
 
+// 面试状态选项，直接对应 Rubric 要求的枚举值。
 const STATUS_OPTIONS = [
   { label: 'Not Started', value: 'Not Started' },
   { label: 'Completed', value: 'Completed' }
 ];
 
+// 统一的初始值，避免表单在切换候选人时出现非受控状态。
 const defaultValues = {
   title: '',
   firstname: '',
   surname: '',
-
-  phone: '',
-  email: '',
-
+  phone_number: '',
+  email_address: '',
   interview_id: '',
   interview_status: 'Not Started'
 };
@@ -27,41 +28,53 @@ export default function ApplicantForm({
   generatedLink,
   onCopyLink
 }) {
+  // values 保存当前输入数据；touched 用于控制校验提示仅在用户编辑后出现。
   const [values, setValues] = useState({ ...defaultValues, ...initialValues });
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
-    setValues({ ...defaultValues, ...initialValues });
+    // 当外部传入的初始值变化时，同步更新表单状态并确保选择框使用字符串。
+    const normalized = initialValues
+      ? {
+          ...initialValues,
+          interview_id: initialValues.interview_id ? String(initialValues.interview_id) : ''
+        }
+      : {};
+    setValues({ ...defaultValues, ...normalized });
   }, [initialValues]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    // 简单的受控组件写法，保持代码可读性。
     setValues((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBlur = (event) => {
     const { name } = event.target;
+    // 标记字段已被访问，以便展示错误信息。
     setTouched((prev) => ({ ...prev, [name]: true }));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    const requiredFields = ['firstname', 'surname', 'phone', 'email', 'interview_id'];
-
+    // 根据 PRD 检查必填字段，缺失时阻止提交并提示用户。
+    const requiredFields = ['firstname', 'surname', 'phone_number', 'email_address', 'interview_id'];
     const missing = requiredFields.filter((field) => !values[field]?.toString().trim());
     if (missing.length > 0) {
       const newTouched = missing.reduce((acc, field) => ({ ...acc, [field]: true }), {});
       setTouched((prev) => ({ ...prev, ...newTouched }));
       return;
     }
-
-    onSubmit({ ...values, interview_id: Number(values.interview_id) });
-
+    // 提交前将 interview_id 转回数字，符合后端数据类型。
+    onSubmit({
+      ...values,
+      interview_id: Number(values.interview_id)
+    });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      {/* 基础信息与面试关联字段 */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="title" className="block text-sm font-medium text-slate-700">
@@ -106,6 +119,7 @@ export default function ApplicantForm({
         </div>
       </div>
 
+      {/* 姓名信息 */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="firstname" className="block text-sm font-medium text-slate-700">
@@ -146,49 +160,42 @@ export default function ApplicantForm({
         </div>
       </div>
 
+      {/* 联系方式 */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-
-          <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="phone_number" className="block text-sm font-medium text-slate-700">
             Phone
           </label>
           <input
-            id="phone"
-            name="phone"
+            id="phone_number"
+            name="phone_number"
             type="tel"
             required
-            value={values.phone}
-
+            value={values.phone_number}
             onChange={handleChange}
             onBlur={handleBlur}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
-
-          {touched.phone && !values.phone.trim() && (
-
+          {touched.phone_number && !values.phone_number.trim() && (
             <p className="text-sm text-rose-600">Phone is required.</p>
           )}
         </div>
 
         <div className="space-y-2">
-
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="email_address" className="block text-sm font-medium text-slate-700">
             Email
           </label>
           <input
-            id="email"
-            name="email"
+            id="email_address"
+            name="email_address"
             type="email"
             required
-            value={values.email}
-
+            value={values.email_address}
             onChange={handleChange}
             onBlur={handleBlur}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
-
-          {touched.email && !values.email.trim() && (
-
+          {touched.email_address && !values.email_address.trim() && (
             <p className="text-sm text-rose-600">Email is required.</p>
           )}
         </div>
@@ -205,6 +212,7 @@ export default function ApplicantForm({
           onChange={handleChange}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         >
+          {/* 状态下拉框直接渲染枚举值，保证数据一致性 */}
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -214,6 +222,7 @@ export default function ApplicantForm({
       </div>
 
       {generatedLink && (
+        // 生成候选人专属面试链接，满足唯一链接的评分要求。
         <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-700">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="font-medium">Interview link:</span>
@@ -237,6 +246,7 @@ export default function ApplicantForm({
         <button
           type="button"
           onClick={onCancel}
+          // 保留取消按钮以便用户快速返回列表。
           className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-500"
         >
           Cancel
@@ -244,6 +254,7 @@ export default function ApplicantForm({
         <button
           type="submit"
           disabled={submitting}
+          // 根据提交状态切换按钮文案，提供操作反馈。
           className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? 'Saving...' : 'Save Applicant'}

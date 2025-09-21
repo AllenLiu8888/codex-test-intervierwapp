@@ -1,3 +1,4 @@
+// AI 总结服务：当前使用占位逻辑，待接入真实 LLM API 后替换。
 const AI_PLACEHOLDER_DELAY = 800;
 
 export async function generateApplicantSummary({ applicant, answers }) {
@@ -15,9 +16,7 @@ export async function generateApplicantSummary({ applicant, answers }) {
   }
 
   const answerHighlights = (answers || [])
-
-    .map((answer, index) => `Q${index + 1}: ${answer.transcript?.slice(0, 140) || 'No transcript yet.'}`)
-
+    .map((answer, index) => `Q${index + 1}: ${answer.answer?.slice(0, 140) || 'No transcript yet.'}`)
     .join('\n');
 
   return `AI Summary (simulated) for ${applicant.firstname} ${applicant.surname}:\n` +

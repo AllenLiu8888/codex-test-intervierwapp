@@ -1,3 +1,4 @@
+// 题库页面，支持按面试筛选、刷新与删除题目。
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { listQuestions, deleteQuestion } from '../../services/questionApi.js';
@@ -22,12 +23,14 @@ export default function QuestionsPage() {
   const questions = useMemo(() => data ?? [], [data]);
 
   const clearFilter = () => {
+    // 清除 URL 参数，返回全部题目列表。
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('interview');
     setSearchParams(nextParams, { replace: true });
   };
 
   const handleDelete = async (id) => {
+    // 删除前提醒用户，避免误删题目。
     const confirmed = window.confirm('Delete this question?');
     if (!confirmed) return;
     setActionError('');
@@ -46,6 +49,7 @@ export default function QuestionsPage() {
           <h2 className="text-3xl font-semibold text-slate-900">Question Bank</h2>
           <p className="text-slate-600">Review, categorize, and refine your interview questions.</p>
           {interviewId && (
+            // 显示当前面试过滤条件。
             <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
               Filtering by interview #{interviewId}
               <button type="button" onClick={clearFilter} className="text-indigo-500 underline-offset-2 hover:underline">
@@ -106,6 +110,7 @@ export default function QuestionsPage() {
                   className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                     difficultyStyles[question.difficulty] ?? 'bg-slate-100 text-slate-600'
                   }`}
+                  // 题目难度使用颜色区分，方便快速浏览。
                 >
                   {question.difficulty ?? 'Unrated'}
                 </span>

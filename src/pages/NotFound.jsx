@@ -1,3 +1,4 @@
+// 404 页面，提供返回仪表盘的指引。
 import { Link } from 'react-router-dom';
 
 export default function NotFound() {

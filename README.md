@@ -14,7 +14,7 @@ Front-end client for the ReadySetHire assessment. Built with React, React Router
    ```bash
    npm install
    ```
-2. Start the development server:
+2. Start the development server (Vite listens on **http://localhost:5176**):
    ```bash
    npm run dev
    ```
@@ -26,9 +26,13 @@ Create a `.env.local` file with the following keys:
 
 ```
 VITE_API_BASE_URL=https://comp2140a2.uqcloud.net/api
-
+VITE_API_JWT=YOUR-POSTGREST-JWT
+VITE_API_USERNAME=YOUR-STUDENT-ID # optional when JWT payload already includes username
 VITE_LLM_API_KEY=YOUR-LLM-KEY-HERE
 ```
+
+`VITE_API_JWT` is required for every API request and will be injected into the `Authorization: Bearer` header automatically.
+`VITE_API_USERNAME` is optional—the app will attempt to read the username from the JWT payload automatically.
 
 `VITE_LLM_API_KEY` is optional for the placeholder GenAI feature but required once a production integration is wired.
 
@@ -38,6 +42,7 @@ Additional docs live in the [`docs/`](./docs/README.md) folder:
 - API usage notes
 - How to run instructions (including transcription options)
 - QA checklist used for self-review
+- Step-by-step build plan for recreating the project from scratch
 
 ## Sample Data
 Use the interview creation form to add at least one interview (e.g., “Frontend Engineer Screen”) so rubric item 1.1 is satisfied. The UI supports seeding via the provided forms without additional tooling.

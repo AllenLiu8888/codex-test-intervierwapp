@@ -1,3 +1,4 @@
+// 面试新增/编辑页面，使用共享表单组件完成 CRUD。
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import InterviewForm from '../../components/forms/InterviewForm.jsx';
@@ -16,9 +17,11 @@ export default function InterviewEditorPage() {
     [id]
   );
 
+  // API 可能返回数组或单项，统一转换为对象。
   const interview = useMemo(() => (Array.isArray(data) ? data[0] : data), [data]);
 
   const handleSubmit = async (values) => {
+    // 根据是否为编辑模式调用不同接口。
     setSubmitting(true);
     setErrorMessage('');
     try {

@@ -1,3 +1,4 @@
+// 环境变量工具：负责读取 JWT、解析用户名并提供缓存。
 let cachedUsername = undefined;
 let hasResolvedUsername = false;
 
@@ -17,6 +18,7 @@ function decodeBase64Url(value) {
 }
 
 export function getApiAuthToken() {
+  // 所有 HTTP 请求都需要带上 Authorization 头，因此统一从环境变量读取。
   const token = import.meta.env.VITE_API_JWT;
   return typeof token === 'string' ? token.trim() : '';
 }
@@ -33,6 +35,7 @@ export function getApiUsername() {
     return cachedUsername;
   }
 
+  // 若未显式配置用户名，则尝试从 JWT payload 中解析。
   const token = getApiAuthToken();
   if (!token) {
     hasResolvedUsername = true;

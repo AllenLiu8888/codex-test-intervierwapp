@@ -1,3 +1,4 @@
+// 录音逻辑 Hook，封装 MediaRecorder 的生命周期、状态管理与错误处理。
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useAudioRecorder() {
@@ -19,9 +20,8 @@ export function useAudioRecorder() {
     mediaRecorderRef.current = null;
   }, []);
 
-  useEffect(() => () => reset(), [reset]);
-
   const reset = useCallback(() => {
+    // 恢复初始状态，并释放已创建的资源。
     chunksRef.current = [];
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
@@ -35,11 +35,14 @@ export function useAudioRecorder() {
     cleanup();
   }, [audioUrl, cleanup]);
 
+  useEffect(() => () => reset(), [reset]);
+
   const ensureRecorder = useCallback(async () => {
     if (mediaRecorderRef.current) return mediaRecorderRef.current;
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error('Audio recording is not supported in this browser.');
     }
+    // 申请麦克风权限并创建 MediaRecorder 实例。
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     streamRef.current = stream;
     const recorder = new MediaRecorder(stream);
@@ -49,6 +52,7 @@ export function useAudioRecorder() {
       }
     };
     recorder.onstop = () => {
+      // 合并录音片段并生成可供下载/回放的 URL。
       const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
       setAudioBlob(blob);
       const objectUrl = URL.createObjectURL(blob);
@@ -84,6 +88,7 @@ export function useAudioRecorder() {
   const pause = useCallback(() => {
     const recorder = mediaRecorderRef.current;
     if (!recorder || recorder.state !== 'recording') return;
+    // MediaRecorder 自带 pause/resume，我们只同步 UI 状态。
     recorder.pause();
     setIsPaused(true);
   }, []);
@@ -101,6 +106,7 @@ export function useAudioRecorder() {
     recorder.stop();
   }, []);
 
+  // 向外暴露操作函数和状态，供录音组件调用。
   return {
     start,
     pause,

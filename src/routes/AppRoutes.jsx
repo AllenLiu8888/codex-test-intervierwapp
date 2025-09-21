@@ -1,3 +1,4 @@
+// 应用所有路由配置，保持页面结构与导航一致。
 import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../components/AppLayout.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
@@ -32,9 +33,7 @@ export default function AppRoutes() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
-
-      <Route path="/take/:token" element={<TakeInterviewLanding />} />
-
+      <Route path="/take/:applicantId" element={<TakeInterviewLanding />} />
     </Routes>
   );
 }

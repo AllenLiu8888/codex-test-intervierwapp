@@ -1,3 +1,4 @@
+// 题目新增/编辑页面，加载面试列表并复用 QuestionForm。
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import QuestionForm from '../../components/forms/QuestionForm.jsx';
@@ -27,11 +28,13 @@ export default function QuestionEditorPage() {
     [interviewsResult.data]
   );
 
+  // API 返回结构不固定，统一处理为对象。
   const question = useMemo(() => (Array.isArray(questionResult.data) ? questionResult.data[0] : questionResult.data), [
     questionResult.data
   ]);
 
   const handleSubmit = async (values) => {
+    // 创建或更新题目后返回列表。
     setSubmitting(true);
     setErrorMessage('');
     try {

@@ -1,3 +1,4 @@
+// 仪表盘页面，提供快速导航到核心功能。
 import { Link } from 'react-router-dom';
 
 const quickLinks = [
@@ -33,6 +34,7 @@ export default function Dashboard() {
           <Link
             key={link.to}
             to={link.to}
+            // 卡片化入口，帮助用户理解完整流程。
             className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <h3 className="text-xl font-semibold text-indigo-600 group-hover:text-indigo-500">{link.title}</h3>

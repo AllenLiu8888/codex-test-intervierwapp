@@ -1,12 +1,11 @@
+// 候选人新增/编辑页面，负责加载下拉数据并复用表单组件。
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ApplicantForm from '../../components/forms/ApplicantForm.jsx';
 import { listInterviews } from '../../services/interviewApi.js';
 import { createApplicant, getApplicant, updateApplicant } from '../../services/applicantApi.js';
 import { useAsyncData } from '../../hooks/useAsyncData.js';
-
-import { buildApplicantLink, generateApplicantToken } from '../../utils/interviewLinks.js';
-
+import { buildApplicantLink } from '../../utils/interviewLinks.js';
 
 export default function ApplicantEditorPage() {
   const navigate = useNavigate();
@@ -14,10 +13,9 @@ export default function ApplicantEditorPage() {
   const isEditing = Boolean(id);
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
 
-  const [linkToken, setLinkToken] = useState('');
-
-
+  // 预加载面试列表，供下拉选择使用。
   const interviewsResult = useAsyncData(({ signal }) => listInterviews({ signal }), []);
   const applicantResult = useAsyncData(
     ({ signal }) => (isEditing ? getApplicant(id, { signal }) : Promise.resolve(null)),
@@ -25,20 +23,14 @@ export default function ApplicantEditorPage() {
   );
 
   useEffect(() => {
+    // 根据编辑状态自动生成候选人链接。
     const record = Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data;
-
-    if (!record) return;
-    const tokenCandidate = record?.invite_token || record?.token || record?.link_token || record?.access_token;
-    if (tokenCandidate) {
-      setLinkToken(tokenCandidate);
+    if (record?.id) {
+      setGeneratedLink(buildApplicantLink(record.id));
+    } else {
+      setGeneratedLink('');
     }
   }, [applicantResult.data]);
-
-  useEffect(() => {
-    if (!isEditing && !linkToken) {
-      setLinkToken(generateApplicantToken());
-    }
-  }, [isEditing, linkToken]);
 
   const interviewOptions = useMemo(
     () =>
@@ -49,36 +41,34 @@ export default function ApplicantEditorPage() {
     [interviewsResult.data]
   );
 
-
-  const applicant = useMemo(
-    () => (Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data),
-    [applicantResult.data]
-  );
-
-  const ensureToken = () => {
-    if (!linkToken) {
-      const token = generateApplicantToken();
-      setLinkToken(token);
-      return token;
-    }
-    return linkToken;
-  };
-
+  const applicant = useMemo(() => {
+    // API 返回数组或单条记录，这里统一转换为表单可用格式。
+    const record = Array.isArray(applicantResult.data) ? applicantResult.data[0] : applicantResult.data;
+    if (!record) return undefined;
+    return {
+      ...record,
+      interview_id: record.interview_id ? String(record.interview_id) : ''
+    };
+  }, [applicantResult.data]);
 
   const handleSubmit = async (values) => {
+    // 根据是否编辑决定调用创建或更新接口。
     setSubmitting(true);
     setErrorMessage('');
-
-    const token = ensureToken();
-    const payload = { ...values, invite_token: token };
-
+    const { id: _omitId, ...rest } = values;
+    const payload = {
+      ...rest,
+      interview_id: Number(values.interview_id)
+    };
     try {
       if (isEditing) {
         await updateApplicant(id, payload);
       } else {
-
-        await createApplicant(payload);
-
+        const created = await createApplicant(payload);
+        const createdRecord = Array.isArray(created) ? created[0] : created;
+        if (createdRecord?.id) {
+          setGeneratedLink(buildApplicantLink(createdRecord.id));
+        }
       }
       navigate('/applicants');
     } catch (submissionError) {
@@ -91,11 +81,9 @@ export default function ApplicantEditorPage() {
   const handleCancel = () => navigate('/applicants');
 
   const handleCopyLink = async () => {
-
-    const token = ensureToken();
-    const link = buildApplicantLink(token);
-
+    const link = generatedLink;
     try {
+      // 复制生成的邀请链接，方便手动分享给候选人。
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(link);
         setErrorMessage('');
@@ -104,10 +92,6 @@ export default function ApplicantEditorPage() {
       setErrorMessage('Unable to copy link automatically. Copy it manually.');
     }
   };
-
-
-  const generatedLink = linkToken ? buildApplicantLink(linkToken) : '';
-
 
   if (interviewsResult.loading || applicantResult.loading) {
     return (

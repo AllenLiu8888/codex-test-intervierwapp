@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 全局背景与排版设定，保持与主色调一致 */
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }

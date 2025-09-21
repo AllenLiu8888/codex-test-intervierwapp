@@ -1,5 +1,7 @@
+// 面试信息表单，负责处理标题、职位、描述和状态字段。
 import { useEffect, useState } from 'react';
 
+// 状态选项对应后端允许的值。
 const STATUS_OPTIONS = [
   { label: 'Draft', value: 'Draft' },
   { label: 'Published', value: 'Published' }
@@ -13,10 +15,12 @@ const defaultValues = {
 };
 
 export default function InterviewForm({ initialValues, onSubmit, onCancel, submitting, errorMessage }) {
+  // 使用受控表单保证组件的可预测性。
   const [values, setValues] = useState({ ...defaultValues, ...initialValues });
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
+    // 当外部传入的数据更新时同步表单。
     setValues({ ...defaultValues, ...initialValues });
   }, [initialValues]);
 
@@ -32,6 +36,7 @@ export default function InterviewForm({ initialValues, onSubmit, onCancel, submi
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    // PRD 要求所有字段必填，因此统一校验后再提交。
     if (!values.title.trim() || !values.job_role.trim() || !values.description.trim()) {
       setTouched({ title: true, job_role: true, description: true });
       return;
@@ -111,6 +116,7 @@ export default function InterviewForm({ initialValues, onSubmit, onCancel, submi
           onChange={handleChange}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         >
+          {/* 状态列表为固定集合，遍历渲染即可 */}
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -125,6 +131,7 @@ export default function InterviewForm({ initialValues, onSubmit, onCancel, submi
         <button
           type="button"
           onClick={onCancel}
+          // 取消操作允许用户返回上一层页面。
           className="inline-flex items-center justify-center rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-500"
         >
           Cancel
@@ -132,6 +139,7 @@ export default function InterviewForm({ initialValues, onSubmit, onCancel, submi
         <button
           type="submit"
           disabled={submitting}
+          // 提交按钮根据 loading 状态切换文案。
           className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? 'Saving...' : 'Save Interview'}

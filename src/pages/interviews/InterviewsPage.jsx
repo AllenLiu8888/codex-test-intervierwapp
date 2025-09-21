@@ -1,3 +1,4 @@
+// 面试列表页面，展示概览统计并允许快速跳转到问题/候选人。
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { listInterviews, deleteInterview } from '../../services/interviewApi.js';
@@ -11,6 +12,7 @@ export default function InterviewsPage() {
   const interviews = useMemo(() => data ?? [], [data]);
 
   const handleDelete = async (id) => {
+    // 删除前进行确认，避免误操作。
     const confirmed = window.confirm('Delete this interview? This cannot be undone.');
     if (!confirmed) return;
     setActionError('');
@@ -35,6 +37,7 @@ export default function InterviewsPage() {
           <button
             type="button"
             onClick={refetch}
+            // 提供手动刷新以获取最新统计。
             className="inline-flex items-center rounded-md border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm transition hover:border-indigo-300 hover:text-indigo-500"
           >
             Refresh
@@ -105,6 +108,7 @@ export default function InterviewsPage() {
                           ? 'bg-emerald-100 text-emerald-700'
                           : 'bg-amber-100 text-amber-700'
                       }`}
+                      // 状态徽章帮助识别草稿与已发布面试。
                     >
                       {interview.status ?? 'Draft'}
                     </span>
@@ -113,6 +117,7 @@ export default function InterviewsPage() {
                     <button
                       type="button"
                       onClick={() => navigate(`/questions?interview=${interview.id}`)}
+                      // 快速跳转到对应面试的问题列表。
                       className="underline-offset-2 hover:underline"
                     >
                       {interview.questions_count ?? interview.questions?.length ?? '—'}
@@ -122,6 +127,7 @@ export default function InterviewsPage() {
                     <button
                       type="button"
                       onClick={() => navigate(`/applicants?interview=${interview.id}`)}
+                      // 快捷访问候选人列表以查看进度。
                       className="underline-offset-2 hover:underline"
                     >
                       {interview.applicants_count ?? interview.applicants?.length ?? '—'}
